@@ -57,8 +57,9 @@ long hammerArray(counter::ConcurrentCounter *counter, int nthreads, int nwrites,
 int main(void) {
 
   std::size_t max_elements = 4096;
+  std::size_t granularity = 64;
   
-  int nthreads = 8, nwrites = 1000000;
+  int nthreads = 8, nwrites = 1000000; // increase write count for additional accuracy
 
   // Print CSV headers
   std::cout << "Implementation,NumElements,TimeMillis,ThroughputWPerSec,AvgNanos" << std::endl;
@@ -68,7 +69,7 @@ int main(void) {
   double MICROS_TO_MILLIS = 0.001;
   double MICROS_TO_SECONDS = 0.000001;
 
-  for (std::size_t num_elements = 1; num_elements <= max_elements; num_elements *= 2) {
+  for (std::size_t num_elements = granularity; num_elements <= max_elements; num_elements += granularity) {
 
     // Initialize all impls for testing
     std::map<Impl, counter::ConcurrentCounter*> impls;

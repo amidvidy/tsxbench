@@ -18,7 +18,7 @@ namespace bench {
   } benchconf_t;
   
   enum Impl { Coarse, Fine, RTMAdaptiveCoarse, RTMAdaptiveFine, RTMNaive, NoSync };
-  const char* ImplStr[] = { "Coarse", "Fine", "RTMAdaptiveCoarse", "RTMAdaptiveFine", "RTMNaive"};
+  const char* ImplStr[] = { "Coarse", "Fine", "RTMAdaptiveCoarse", "RTMAdaptiveFine", "RTMNaive", "NoSync"};
 
   class Benchmark {
     

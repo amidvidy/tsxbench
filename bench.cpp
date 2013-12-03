@@ -55,7 +55,7 @@ long hammerArray(counter::ConcurrentCounter *counter, int nthreads, int nwrites,
 }
 
 int main(void) {
-  std::size_t num_elements = 200;
+  std::size_t num_elements = 128;
 
   int nthreads = 8, nwrites = 1000000;
 

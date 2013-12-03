@@ -60,8 +60,7 @@ int CoarseConcurrentCounter::get(std::size_t index) {
 
 void FineConcurrentCounter::increment(std::size_t index) {
   spinlock_t::scoped_lock acquire(spinlocks[index], true);
-  int current = storage[index];
-  storage[index] = current + 1;
+  ++storage[index];
 }
 
 void FineConcurrentCounter::incrementRange(std::size_t index, std::size_t len) {
@@ -80,8 +79,7 @@ int FineConcurrentCounter::get(std::size_t index) {
 
 void RTMCoarseConcurrentCounter::increment(std::size_t index) {
   sync::TransactionalScope xact(spinlock, true);
-  int current = storage[index];
-  storage[index] = current + 1;
+  ++storage[index];
 }
 
 void RTMCoarseConcurrentCounter::incrementRange(std::size_t index, std::size_t len) {
@@ -98,8 +96,7 @@ int RTMCoarseConcurrentCounter::get(std::size_t index) {
 
 void RTMFineConcurrentCounter::increment(std::size_t index) {
   sync::TransactionalScope xact(spinlocks[index], true);
-  int current = storage[index];
-  storage[index] = current + 1;
+  ++storage[index];
 }
 
 void RTMFineConcurrentCounter::incrementRange(std::size_t index, std::size_t len) {
@@ -121,8 +118,7 @@ void RTMConcurrentCounter::increment(std::size_t index) {
   do { 
     _xbegin();
   } while (!_xtest());
-  int current = storage[index];
-  storage[index] = current + 1;
+  ++storage[index];
   _xend();
 }
 

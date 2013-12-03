@@ -64,6 +64,10 @@ int main(void) {
   std::cout << "Implementation,NumElements,TimeMillis,ThroughputWPerSec,AvgNanos" << std::endl;
   std::string DELIM(",");
 
+  double MICROS_TO_NANOS = 1000.0;
+  double MICROS_TO_MILLIS = 0.001;
+  double MICROS_TO_SECONDS = 0.000001;
+
   for (std::size_t num_elements = 1; num_elements <= max_elements; num_elements *= 2) {
 
     // Initialize all impls for testing
@@ -87,10 +91,11 @@ int main(void) {
       auto avg = run_time / (double)total_recorded;
 
       int missing = total_recorded - total_expected;
-      std::cout << ImplStr[impl.first] << DELIM;
-      std::cout << num_elements << DELIM;
-      std::cout << (double)run_time * 0.001 << DELIM;
-      std::cout << avg * 1000  << std::endl;
+      std::cout << ImplStr[impl.first] << DELIM; // Implementation Col
+      std::cout << num_elements << DELIM; // NumElements Col
+      std::cout << (double)run_time * MICROS_TO_MILLIS << DELIM; // TimeMillis Col
+      std::cout << total_recorded / ((double)run_time * MICROS_TO_SECONDS) << DELIM;
+      std::cout << avg * MICROS_TO_NANOS  << std::endl; // AvgNanos Col 
       if (total_recorded != total_expected) {
 	std::cerr << "ERROR: MISSING WRITES!!!" << std::endl;
       }

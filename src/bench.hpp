@@ -11,17 +11,17 @@ namespace bench {
   typedef std::chrono::milliseconds millis;
 
   typedef struct BenchConf {
-    
+
     int nthreads;
     int nwrites;
 
   } benchconf_t;
-  
-  enum Impl { Coarse, Fine, RTMAdaptiveCoarse, RTMAdaptiveFine, RTMNaive, NoSync };
-  const char* ImplStr[] = { "Coarse", "Fine", "RTMAdaptiveCoarse", "RTMAdaptiveFine", "RTMNaive", "NoSync"};
+
+  enum Impl { Coarse, Fine, TSXCoarse, TSXFine };
+  const char* ImplStr[] = { "Coarse", "Fine", "TSXCoarse", "TSXFine" };
 
   class Benchmark {
-    
+
     virtual long doBench(Impl impl, benchconf_t conf) = 0;
     //virtual duration<double, nanos> getElapsed();
 

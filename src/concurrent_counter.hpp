@@ -1,81 +1,74 @@
 #include <array>
 #include <mutex>
-#include "lock.hpp"
 
 namespace bench {
 namespace counter {
 
+template <typename LockType>
 class ConcurrentCounter {
 public:
-  ConcurrentCounter(std::size_t size);
-  ~ConcurrentCounter();
-  virtual void increment(std::size_t index) = 0;
-  virtual void incrementRange(std::size_t index, std::size_t len) = 0;
-  //virtual void incrementAll(std::vector<std::size_t> indices) = 0;
-  virtual int get(std::size_t index) = 0;
-  size_t size();
-  int total(); // default implementation not threadsafe
+  ConcurrentCounter(std::size_t size): sz_(size)  {
+      storage_ = new int[size]();
+  }
+
+  ~ConcurrentCounter() {
+      delete [] storage_;
+      storage_ = nullptr;
+  };
+
+  void increment(std::size_t index) {
+    typename LockType::scoped_lock lock(lock_for(index));
+    ++storage_[index];
+  }
+
+  int get(std::size_t index) {
+    typename LockType::scoped_lock lock(lock_for(index));
+    return storage_[index];
+  }
+
+  size_t size() { return sz_; }
+
+  int total() {
+      int sum = 0;
+      for (int i = 0; i < sz_; ++i) {
+          sum += storage_[i];
+      }
+      return sum;
+  } // default implementation not threadsafe
 protected:
-  int *storage;
-  std::size_t sz;
+  // Get the lock for a certain element
+  virtual LockType& lock_for(std::size_t index) = 0;
+  int* storage_;
+  std::size_t sz_;
 };
 
-class IncorrectConcurrentCounter : public ConcurrentCounter {
+template <typename LockType>
+class CoarseConcurrentCounter : public ConcurrentCounter<LockType> {
 public:
-  IncorrectConcurrentCounter(std::size_t size) : ConcurrentCounter(size) {};
-  void increment(std::size_t index) override;
-  void incrementRange(std::size_t index, std::size_t len) override;
-  int get(std::size_t index) override;
-};
-
-class CoarseConcurrentCounter : public ConcurrentCounter {
-public:
-  CoarseConcurrentCounter(std::size_t size) : ConcurrentCounter(size) {}
-  void increment(std::size_t index) override;
-  void incrementRange(std::size_t index, std::size_t len) override;
-  int get(std::size_t index) override;
+  CoarseConcurrentCounter(std::size_t size) : ConcurrentCounter<LockType>(size) {}
 protected:
-  spinlock_t spinlock;
+  LockType& lock_for(std::size_t index) {
+    return lock_;
+  }
+  LockType lock_;
 };
 
-class FineConcurrentCounter : public ConcurrentCounter {
+template <typename LockType>
+class FineConcurrentCounter : public ConcurrentCounter<LockType> {
 public:
-  FineConcurrentCounter(std::size_t size) : ConcurrentCounter(size) {
-    spinlocks = new spinlock_t[size];
+    FineConcurrentCounter(std::size_t size, std::size_t lock_count = 64) : lock_count_(lock_count), ConcurrentCounter<LockType>(size) {
+    locks_ = new LockType[lock_count];
   }
   ~FineConcurrentCounter() {
-    delete spinlocks;
+    delete [] locks_;
+    locks_ = nullptr;
   }
-  void increment(std::size_t index) override;
-  void incrementRange(std::size_t index, std::size_t len) override;
-  int get(std::size_t index) override;
 protected:
-  //std::mutex *mutices;
-  spinlock_t *spinlocks;
-};
-
-class RTMCoarseConcurrentCounter : public CoarseConcurrentCounter {
-public:
-  RTMCoarseConcurrentCounter(std::size_t size) : CoarseConcurrentCounter(size) {}
-  void increment(std::size_t index) override;
-  void incrementRange(std::size_t index, std::size_t len) override;
-  int get(std::size_t index) override;
-};
-
-class RTMFineConcurrentCounter : public FineConcurrentCounter {
-public:
-  RTMFineConcurrentCounter(std::size_t size) : FineConcurrentCounter(size) {}
-  void increment(std::size_t index) override;
-  void incrementRange(std::size_t index, std::size_t len) override;
-  int get(std::size_t index) override;
-};
-
-class RTMConcurrentCounter : public ConcurrentCounter {
-public:
-  RTMConcurrentCounter(std::size_t size) : ConcurrentCounter(size) {}
-  void increment(std::size_t index) override;
-  void incrementRange(std::size_t index, std::size_t len) override;
-  int get(std::size_t index) override;
+  LockType& lock_for(std::size_t index) {
+    return locks_[index % lock_count_];
+  }
+  std::size_t lock_count_;
+  LockType *locks_;
 };
 
 } // namespace counter
